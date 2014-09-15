@@ -14,7 +14,7 @@ ptzSettings settings[2];
 //--------------------------------------------------------------
 void ofApp::setup(){
 	midiOut.listPorts(); // via instance
-	midiOut.openPort(0); // by number
+	midiOut.openPort("MT4 Port 1"); // by number
     ofSetFrameRate(30);
     
     for(int i=0;i<7;i++){
@@ -24,6 +24,7 @@ void ofApp::setup(){
             newCam.pos = ofVec2f(0.9,0.9);
             newCam.color = ofColor(255,0,0);
             newCam.name = "DSF";
+            newCam.input = 8;
             cameras.push_back(newCam);
         }
         if(i==1){
@@ -154,8 +155,14 @@ void ofApp::update(){
             ptz.recallMemory(m.getArgAsInt32(0)-1, m.getArgAsInt32(1)-1);
         }
         if(m.getAddress() == "/cut"){
-            int time = 0;
+            float time = 0;
             if(m.getNumArgs() >= 2){
+                if(m.getArgTypeName(1) == "string"){
+                    string t = m.getArgAsString(1);
+                    time = ofToFloat(t);
+                } else {
+                    time = m.getArgAsFloat(1);
+                }
                 time = m.getArgAsFloat(1);
             }
             
@@ -170,7 +177,7 @@ void ofApp::update(){
             if(m.getArgTypeName(0) == "string"){
                 preview( inputFromName(m.getArgAsString(0)));
             } else {
-                preview(m.getArgAsInt32(0)-1);
+                preview(m.getArgAsInt32(0));
             }
         }
     }
@@ -202,7 +209,7 @@ void ofApp::cutTo(int input){
 }
 
 void ofApp::preview(int input){
-    midiOut.sendControlChange(1, 4, input);
+    midiOut.sendControlChange(1, 4, input-1);
 }
 
 void ofApp::setDeck(int deck, int input){
