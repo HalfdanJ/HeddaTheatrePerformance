@@ -14,7 +14,7 @@ public:
     
    // vector<void (^)(message)> callbacks;
     
-    void (^callback)(message) = ^(message m){};
+    void (^callback)(message, ofSerial*) = ^(message m, ofSerial * serialIn){};
     
     bool error;
 };
@@ -25,6 +25,7 @@ public:
     void update();
     
     ofSerial serial;
+    __block ofSerial serialIn;
     
     queue<message> messageQueue;
     queue<message> statusQueue;
@@ -35,13 +36,25 @@ public:
     message * addStatusMessage(int Count, ... );
     
     void setZoom(int cam, int zoomLevel, int speed);
+    void setAE(int cam, int ae);
+    void setIris(int cam, int val);
+    void setGain(int cam, int val);
+    
     void recallMemory(int cam, int memory);
     
 private:
     void messageReceived();
     vector<int> incommingBytes;
     message sendingMessage;
+
+    void relayMessageReceived();
+    vector<int> incommingRelayBytes;
+    queue<message> relayMessages;
     
-    bool serialOK;
+    bool serialOK, serialInOK;
+    
+    int timeout;
+    
+    bool flip;
     
 };

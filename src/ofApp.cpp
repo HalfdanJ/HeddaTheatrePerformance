@@ -15,7 +15,7 @@ ptzSettings settings[2];
 void ofApp::setup(){
 	midiOut.listPorts(); // via instance
 	midiOut.openPort("MT4 Port 1"); // by number
-    ofSetFrameRate(30);
+    ofSetFrameRate(100);
     
     for(int i=0;i<7;i++){
         camera newCam;
@@ -74,11 +74,11 @@ void ofApp::setup(){
     
     ptz.setup();
     
-    ptz.addStatusMessage(5, 0x81, 0x09, 0x04, 0x00, 0xFF);
+//    ptz.addStatusMessage(5, 0x81, 0x09, 0x04, 0x00, 0xFF);
     
     //Zoom Inq
     for(int c=0;c<2;c++){
-        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x47, 0xFF)->callback =(^(message m){
+       /* ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x47, 0xFF)->callback =(^(message m, ofSerial * s){
             if(!m.error){
                 int cam = (m.bytes[0] - 0x90) >> 4;
                 //cout<<"CALLBACK"<<m.bytes.size()<<"  "<<cam<<endl;
@@ -95,9 +95,9 @@ void ofApp::setup(){
                 settings[cam].zoomLevel += (int)m.bytes[5];
                 //            cout<<dec<<cam<<"  "<<settings[cam].zoomLevel<<endl;
             }
-        });
+        });*/
         
-        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x39, 0xFF)->callback =(^(message m){
+        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x39, 0xFF)->callback =(^(message m, ofSerial * s){
             if(!m.error){
                 
                 int cam = (m.bytes[0] - 0x90) >> 4;
@@ -110,7 +110,7 @@ void ofApp::setup(){
             }
         });
         
-        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x4A, 0xFF)->callback =(^(message m){
+       /* ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x4A, 0xFF)->callback =(^(message m, ofSerial * s){
             if(!m.error){
                 
                 int cam = (m.bytes[0] - 0x90) >> 4;
@@ -119,9 +119,9 @@ void ofApp::setup(){
                 
                 settings[cam].shutter += (int)m.bytes[5];
             }
-        });
+        });*/
         
-        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x4B, 0xFF)->callback =(^(message m){
+        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x4B, 0xFF)->callback =(^(message m, ofSerial * s){
             if(!m.error){
                 int cam = (m.bytes[0] - 0x90) >> 4;
                 settings[cam].iris = (int)m.bytes[4];
@@ -131,7 +131,17 @@ void ofApp::setup(){
             }
         });
         
-        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x4C, 0xFF)->callback =(^(message m){
+        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x4C, 0xFF)->callback =(^(message m, ofSerial * s){
+            if(!m.error){
+                int cam = (m.bytes[0] - 0x90) >> 4;
+                settings[cam].gain = (int)m.bytes[4];
+                settings[cam].gain = settings[cam].gain<<4;
+                
+                settings[cam].gain += (int)m.bytes[5];
+            }
+        });
+
+        ptz.addStatusMessage(5, 0x81+c, 0x09, 0x04, 0x4C, 0xFF)->callback =(^(message m, ofSerial * s){
             if(!m.error){
                 int cam = (m.bytes[0] - 0x90) >> 4;
                 settings[cam].gain = (int)m.bytes[4];
@@ -154,6 +164,16 @@ void ofApp::update(){
         if(m.getAddress() == "/ptz/memory"){
             ptz.recallMemory(m.getArgAsInt32(0)-1, m.getArgAsInt32(1)-1);
         }
+        if(m.getAddress() == "/ptz/ae"){
+            ptz.setAE(m.getArgAsInt32(0)-1, m.getArgAsInt32(1));
+        }
+        if(m.getAddress() == "/ptz/iris"){
+            ptz.setIris(m.getArgAsInt32(0)-1, m.getArgAsInt32(1));
+        }
+        if(m.getAddress() == "/ptz/gain"){
+            ptz.setGain(m.getArgAsInt32(0)-1, m.getArgAsInt32(1));
+        }
+
         if(m.getAddress() == "/cut"){
             float time = 0;
             if(m.getNumArgs() >= 2){
